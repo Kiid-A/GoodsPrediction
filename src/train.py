@@ -36,5 +36,5 @@ def train():
 
     torch.save({'state_dict': model.state_dict()}, args.save_file)
 
-
-train()
+if __name__ == "__main__":
+    train()

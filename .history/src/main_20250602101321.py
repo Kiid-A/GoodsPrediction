@@ -1,0 +1,11 @@
+from evaluate import eval
+from train import train
+
+
+
+goods = [
+    'BaiCai', 'CaiJiao', 'ChengZi', 'DaDou', 'GengDao', 'GengMi', 'HuangGua', 'HuaShengRen'
+]
+
+eval()
+train()

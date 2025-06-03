@@ -8,25 +8,20 @@ import pandas as pd
 from sklearn.metrics import mean_squared_error
 
 
-def eval(input_date=None, input_price=None):  # 新增输入参数，默认为 None
+def eval(input_date=None):
     model = lstm(input_size=args.input_size, hidden_size=args.hidden_size, num_layers=args.layers, output_size=1)
     model.to(args.device)
-    # 显式设置 weights_only=True 以避免未来警告
-    checkpoint = torch.load(args.save_file, weights_only=True)
+    checkpoint = torch.load(args.save_file)
     model.load_state_dict(checkpoint['state_dict'])
     preds = []
     labels = []
-    min_price, max_price, train_loader, test_loader = getData(args.corpusFile, args.sequence_length, args.batch_size)
-
-    for idx, (x, label) in enumerate(test_loader):
+    min_price, max_price, _, test_loader = getData(args.corpusFile, args.sequence_length, args.batch_size,
+                                                              input_date)
+    for _, (x, label) in enumerate(test_loader):
         x = x.squeeze(1).cuda()
         pred = model(x)
-        # 这里假设 pred 是一个二维张量，我们取最后一个元素
-        pred_value = pred.data.squeeze().tolist()
-        if isinstance(pred_value, list):
-            preds.extend(pred_value[-1])
-        else:
-            preds.append(pred_value)
+        list = pred.data.squeeze(1).tolist()
+        preds.extend(list[-1])
         labels.extend(label.tolist())
 
     axis_label = []
@@ -35,11 +30,10 @@ def eval(input_date=None, input_price=None):  # 新增输入参数，默认为 N
     axis_error = []
 
     for i in range(len(preds)):
-        # 修改这里，直接使用 preds[i]
-        axis_pred.append(preds[i] * (max_price - min_price) + min_price)
+        axis_pred.append(preds[i][0] * (max_price - min_price) + min_price)
         axis_label.append(labels[i] * (max_price - min_price) + min_price)
 
-    error = mean_squared_error(axis_label, axis_pred)
+    error = mean_squared_error(axis_label[:-1], axis_pred[:-1])
 
     df = pd.read_csv(args.corpusFile).iloc[::-1]
 
@@ -52,10 +46,10 @@ def eval(input_date=None, input_price=None):  # 新增输入参数，默认为 N
 
     for i in range(len(df) - len(preds), len(df)):
         axis_x.append(str(int(df['date'][len(df) - i - 1]) % 10000))
-        axis_error.append(np.round(error / np.mean(axis_label), 5) * 10000)
+        axis_error.append(np.round(error / np.mean(axis_label[:-1]), 5) * 10000)
 
     print(f"MSE: {error}")
-    print(f"mean error percent: {np.round(error / np.mean(axis_label), 5) * 100}%")
+    print(f"mean error percent: {np.round(error / np.mean(axis_label[:-1]), 5) * 100}%")
 
     plt.figure(figsize=(16, 8))
     plt.title(f'Prediction on {args.target} Price using LSTM')
@@ -65,4 +59,6 @@ def eval(input_date=None, input_price=None):  # 新增输入参数，默认为 N
     plt.legend(['lable', 'prediction', 'mean error percent(‱)'])
     plt.xlabel('Time(YYMMDD)')
     plt.ylabel('Price')
-    plt.show()
+    # plt.show()
+
+    return axis_pred[-1]

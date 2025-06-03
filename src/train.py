@@ -13,11 +13,11 @@ def train():
     criterion = nn.MSELoss() 
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)  
 
-    min, max, train_loader, test_loader = getData(args.corpusFile,args.sequence_length,args.batch_size )
+    _, _, train_loader, _ = getData(args.corpusFile,args.sequence_length,args.batch_size )
 
     for i in range(args.epochs):
         total_loss = 0
-        for idx, (data, label) in enumerate(train_loader):
+        for _, (data, label) in enumerate(train_loader):
             data1 = data.squeeze(1).cuda()
             pred = model(Variable(data1).cuda())
             pred = pred[1,:,:]

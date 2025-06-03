@@ -4,7 +4,7 @@ import torch
 parser = argparse.ArgumentParser()
 
 
-target = 'CaiJiao'
+target = 'ChengZi'
 seed = 42
 torch.manual_seed(seed)
 
@@ -12,6 +12,7 @@ torch.manual_seed(seed)
 # TODO 常改动参数
 parser.add_argument('--target', default='CaiJiao', type=str)
 parser.add_argument('--corpusFile', default=f'data/{target}.csv')
+parser.add_argument('--predictFile', default=f'predict/{target}.csv')
 parser.add_argument('--gpu', default=0, type=int) 
 parser.add_argument('--split_pct', default=0.85, type=float)
 parser.add_argument('--epochs', default=500, type=int) 
